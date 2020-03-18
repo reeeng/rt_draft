@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Container, Button } from 'semantic-ui-react'
 import './App.css';
+
+import Navbar from "./components/Navbar";
 
 function App() {
   let [canvasNode, setNode] = useState(null)
@@ -73,12 +76,15 @@ function App() {
 
   return (
     <>
-    <canvas 
-      style={{border: '1px solid black'}} 
-      ref={(c) => setNode(c)}>
-    </canvas>
-    <button onClick={() => selection(LINE)}>Line</button>
-    <button onClick={() => selection(BOX)}>Box</button>
+    <Navbar/>  
+    <Container>
+      <canvas 
+        style={{border: '1px solid black'}} 
+        ref={(c) => setNode(c)}>
+      </canvas>
+      <Button content='Primary' primary onClick={() => selection(LINE)}>Line</Button>
+      <Button content='Primary' primary onClick={() => selection(BOX)}>Box</Button>
+    </Container>
     </>
   );
 }
