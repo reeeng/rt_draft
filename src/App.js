@@ -1,14 +1,14 @@
 import React, { useState, useEffect,useRef } from 'react';
-import { Container, Button, Grid, GridColumn } from 'semantic-ui-react'
+import { Container, Button, Grid, GridColumn, GridRow } from 'semantic-ui-react'
 import './App.css';
 
 import Navbar from "./components/Navbar";
 
 function App() {
   let [canvasNode, setNode] = useState(null)
-  let [containerRef, setRef] = useState(null)
   
   let isLine, isBox = false;
+  let clicks = 0
   let lineCoordinated = [],
       boxCoordinates = [];
 
@@ -17,18 +17,15 @@ function App() {
 
   useEffect(() => {
     console.log("effect is in")
-    if (canvasNode !== null && containerRef !== undefined) {
-      console.log(containerRef)
+    if (canvasNode !== null) {
       canvasNode.addEventListener('click', handleClick, false);
     }
-  },)
+  },canvasNode)
 
   function handleClick(e) {
     let c = canvasNode.getContext('2d')
-    console.log(this.offsetLeft)
-    console.log(this.offsetTop)
-    console.log(e)
     let point = [e.pageX - this.offsetLeft, e.pageY - this.offsetTop]
+
     if (isLine) {
       lineDraw(c, point)
     } else {
@@ -63,8 +60,10 @@ function App() {
     lineCoordinated.push([point[0], point[1]])
 
     if (lineCoordinated.length > 1) {
+      console.log("draw")
       let [begin, end] = lineCoordinated
       console.log(begin, end)
+      getStraightLine(begin, end)
       c.beginPath()
       c.moveTo(begin[0], begin[1])
       c.lineTo(end[0], end[1])
@@ -77,10 +76,19 @@ function App() {
 
   }
 
+  function getStraightLine(p1, p2) {
+    console.log(p1,p2)
+    let xDiff = Math.abs(p1[0] - p2[0]);
+    let yDiff = Math.abs(p1[1] - p2[1]);
+    xDiff > yDiff ? p2[1] = p1[1] :p2[0] = p1[0]
+
+    console.log(p1,p2)
+  }
+
   return (
     <>
     <Navbar/>  
-    <Container ref={(e) => setRef(e)}>
+      <Container textAlign='center'>
             <canvas 
               style={{border: '1px solid black'}} 
               ref={(c) => setNode(c)}
@@ -88,9 +96,10 @@ function App() {
               height="500"
               >
             </canvas>
+            
             <Button content='Primary' primary onClick={() => selection(LINE)}>Line</Button>
             <Button content='Primary' primary onClick={() => selection(BOX)}>Box</Button>
-    </Container>
+      </Container>
     </>
   );
 }
