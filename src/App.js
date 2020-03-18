@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Button } from 'semantic-ui-react'
+import React, { useState, useEffect,useRef } from 'react';
+import { Container, Button, Grid, GridColumn } from 'semantic-ui-react'
 import './App.css';
 
 import Navbar from "./components/Navbar";
 
 function App() {
   let [canvasNode, setNode] = useState(null)
+  let [containerRef, setRef] = useState(null)
   
   let isLine, isBox = false;
   let lineCoordinated = [],
@@ -16,16 +17,18 @@ function App() {
 
   useEffect(() => {
     console.log("effect is in")
-    if (canvasNode !== null) {
-      canvasNode.width = window.innerWidth/2
-      canvasNode.height = window.innerHeight/2
+    if (canvasNode !== null && containerRef !== undefined) {
+      console.log(containerRef)
       canvasNode.addEventListener('click', handleClick, false);
     }
-  }, [canvasNode])
+  },)
 
   function handleClick(e) {
     let c = canvasNode.getContext('2d')
-    let point = [e.pageX, e.pageY]
+    console.log(this.offsetLeft)
+    console.log(this.offsetTop)
+    console.log(e)
+    let point = [e.pageX - this.offsetLeft, e.pageY - this.offsetTop]
     if (isLine) {
       lineDraw(c, point)
     } else {
@@ -77,13 +80,16 @@ function App() {
   return (
     <>
     <Navbar/>  
-    <Container>
-      <canvas 
-        style={{border: '1px solid black'}} 
-        ref={(c) => setNode(c)}>
-      </canvas>
-      <Button content='Primary' primary onClick={() => selection(LINE)}>Line</Button>
-      <Button content='Primary' primary onClick={() => selection(BOX)}>Box</Button>
+    <Container ref={(e) => setRef(e)}>
+            <canvas 
+              style={{border: '1px solid black'}} 
+              ref={(c) => setNode(c)}
+              width="500"
+              height="500"
+              >
+            </canvas>
+            <Button content='Primary' primary onClick={() => selection(LINE)}>Line</Button>
+            <Button content='Primary' primary onClick={() => selection(BOX)}>Box</Button>
     </Container>
     </>
   );
