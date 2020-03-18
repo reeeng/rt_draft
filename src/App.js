@@ -6,6 +6,11 @@ import Navbar from "./components/Navbar";
 
 function App() {
   let [canvasNode, setNode] = useState(null)
+
+  let canvasState = {
+    line: [],
+    box: []
+  }
   
   let isLine, isBox = false;
   let clicks = 0
@@ -19,8 +24,28 @@ function App() {
     console.log("effect is in")
     if (canvasNode !== null) {
       canvasNode.addEventListener('click', handleClick, false);
+      canvasNode.addEventListener('mousemove', mouseMove, false);
+      canvasNode.addEventListener('mousedown', mouseDown, false);
     }
   },canvasNode)
+
+  function mouseMove(e) {
+    console.log(e)
+    let point = [e.pageX - this.offsetLeft, e.pageY - this.offsetTop]
+   
+    if (isLine && lineCoordinated.length == 1) {
+      lineHelper(point)
+      return
+    }
+
+    let c = canvasNode.getContext('2d')
+    c.clearRect(0, 0, window.innerWidth, window.innerHeight)
+    renderCanvas()
+    console.log("mouseMove")
+  }
+  function mouseDown() {
+    console.log("mousedown")
+  }
 
   function handleClick(e) {
     let c = canvasNode.getContext('2d')
@@ -67,9 +92,29 @@ function App() {
       c.beginPath()
       c.moveTo(begin[0], begin[1])
       c.lineTo(end[0], end[1])
+      c.lineWidth = 10;
       c.stroke()
       lineCoordinated.length = 0
+      canvasState.line.push([begin, end])
     }
+  }
+
+  function lineHelper(p2) {
+    let c = canvasNode.getContext('2d')
+    let p1 = lineCoordinated[0]
+    c.clearRect(0, 0, window.innerWidth, window.innerHeight)
+    getStraightLine(p1, p2)
+    c.beginPath()
+    c.moveTo(p1[0], p1[1])
+    c.lineTo(p2[0], p2[1])
+    c.lineWidth = 10;
+    c.strokeStyle = '#787878'
+    c.stroke()
+    
+
+    //render the rest of the drawing
+    renderCanvas()
+
   }
 
   function boxDraw(c, point) {
@@ -83,6 +128,21 @@ function App() {
     xDiff > yDiff ? p2[1] = p1[1] :p2[0] = p1[0]
 
     console.log(p1,p2)
+  }
+
+
+  function renderCanvas() {
+    let c = canvasNode.getContext('2d')
+    canvasState.line.forEach( line => {
+      let [begin, end] = line
+      c.beginPath()
+      c.moveTo(begin[0], begin[1])
+      c.lineTo(end[0], end[1])
+      c.lineWidth = 10;
+      c.strokeStyle = '#000000'
+      c.stroke()
+    })
+
   }
 
   return (
