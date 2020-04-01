@@ -13,7 +13,6 @@ function App() {
   }
   
   let isLine, isBox = false;
-  let clicks = 0
   let lineCoordinated = [],
       boxCoordinates = [];
 
@@ -21,13 +20,13 @@ function App() {
   const BOX = 'box'
 
   useEffect(() => {
-    console.log("effect is in")
+
     if (canvasNode !== null) {
+      // bind event listiners to canvas
       canvasNode.addEventListener('click', handleClick, false);
       canvasNode.addEventListener('mousemove', mouseMove, false);
-      canvasNode.addEventListener('mousedown', mouseDown, false);
     }
-  },canvasNode)
+  }, canvasNode)
 
   function mouseMove(e) {
     console.log(e)
@@ -36,15 +35,15 @@ function App() {
     if (isLine && lineCoordinated.length == 1) {
       lineHelper(point)
       return
+    } else {
+      boxHelper(point)
     }
 
+    // redraw
     let c = canvasNode.getContext('2d')
     c.clearRect(0, 0, window.innerWidth, window.innerHeight)
     renderCanvas()
     console.log("mouseMove")
-  }
-  function mouseDown() {
-    console.log("mousedown")
   }
 
   function handleClick(e) {
@@ -56,10 +55,6 @@ function App() {
     } else {
       boxDraw(c, point)
     }
-    //console.log(e)
-    //console.log(canvasNode)
-    // c.fillStyle = 'rgba(255, 0, 0, 0.5)'
-    // c.fillRect(e.pageX, e.pageY, 10, 10)
   }
 
   function selection(type) {
@@ -73,11 +68,7 @@ function App() {
         isLine = !isBox
         break
       default:
-        console.log("this is default")
     }
-
-    console.log("the boolean value of line is ", isLine)
-    console.log("the boolean value of box is ", isBox)
   }
 
 
@@ -92,13 +83,14 @@ function App() {
       c.beginPath()
       c.moveTo(begin[0], begin[1])
       c.lineTo(end[0], end[1])
-      c.lineWidth = 10;
+      c.lineWidth = 6;
       c.stroke()
       lineCoordinated.length = 0
       canvasState.line.push([begin, end])
     }
   }
 
+  // gives user immediate feedback on the line draw
   function lineHelper(p2) {
     let c = canvasNode.getContext('2d')
     let p1 = lineCoordinated[0]
@@ -121,16 +113,16 @@ function App() {
 
   }
 
+  // takes two points of a line to determine
+  // if its vertical or horizontal
   function getStraightLine(p1, p2) {
-    console.log(p1,p2)
     let xDiff = Math.abs(p1[0] - p2[0]);
     let yDiff = Math.abs(p1[1] - p2[1]);
     xDiff > yDiff ? p2[1] = p1[1] :p2[0] = p1[0]
-
-    console.log(p1,p2)
   }
 
 
+  // uses canvasState Obj to redraw draft
   function renderCanvas() {
     let c = canvasNode.getContext('2d')
     canvasState.line.forEach( line => {
@@ -138,7 +130,7 @@ function App() {
       c.beginPath()
       c.moveTo(begin[0], begin[1])
       c.lineTo(end[0], end[1])
-      c.lineWidth = 10;
+      c.lineWidth = 6;
       c.strokeStyle = '#000000'
       c.stroke()
     })
@@ -147,7 +139,8 @@ function App() {
 
   return (
     <>
-    <Navbar/>  
+    <Navbar/>
+      <StartModal /> 
       <Container textAlign='center'>
             <canvas 
               style={{border: '1px solid black'}} 
