@@ -1,116 +1,96 @@
-import React, { useState, useEffect,useRef } from 'react';
+import React, {useState, useEffect} from 'react';
 import { Container, Button, Grid, GridColumn, GridRow } from 'semantic-ui-react'
+import { Stage, Layer, Rect, Line } from 'react-konva';
 import './App.css';
+
+import LineHelper from './components/LineHelper'
 
 import Navbar from "./components/Navbar";
 
 function App() {
-  let [canvasNode, setNode] = useState(null)
-
+  const [lines, setLines] = useState([])
+  const [lineHelper, setLineHelper] = useState([])
+  const [isLine, setIsLine] = useState(false)
+  const [isBox, setIsBox] = useState(false)
   let canvasState = {
     line: [],
     box: []
   }
   
-  let isLine, isBox = false;
-  let lineCoordinated = [],
+  let lineCoordinates = [],
       boxCoordinates = [];
 
+  let lineEstimate = [];
+  
   const LINE = 'line'
   const BOX = 'box'
 
-  useEffect(() => {
-
-    if (canvasNode !== null) {
-      // bind event listiners to canvas
-      canvasNode.addEventListener('click', handleClick, false);
-      canvasNode.addEventListener('mousemove', mouseMove, false);
-    }
-  }, canvasNode)
-
   function mouseMove(e) {
-    console.log(e)
     let point = [e.pageX - this.offsetLeft, e.pageY - this.offsetTop]
    
-    if (isLine && lineCoordinated.length == 1) {
-      lineHelper(point)
+    if (isLine && lineCoordinates.length == 1) {
+      //lineHelper(point)
       return
     } else {
-      boxHelper(point)
+      // boxHelper(point)
     }
 
     // redraw
-    let c = canvasNode.getContext('2d')
-    c.clearRect(0, 0, window.innerWidth, window.innerHeight)
-    renderCanvas()
-    console.log("mouseMove")
+    // let c = canvasNode.getContext('2d')
+    // c.clearRect(0, 0, window.innerWidth, window.innerHeight)
+    // renderCanvas()
+    // console.log("mouseMove")
   }
 
   function handleClick(e) {
-    let c = canvasNode.getContext('2d')
-    let point = [e.pageX - this.offsetLeft, e.pageY - this.offsetTop]
-
+    // let point = [e.evt.layerX - this.offsetLeft, e.evt.pageY - this.offsetTop]
+    let stage = e.currentTarget;
+    let point = stage.getPointerPosition()
     if (isLine) {
-      lineDraw(c, point)
+      storeLinePoint(point)
     } else {
-      boxDraw(c, point)
+      // boxDraw(point)
     }
   }
 
   function selection(type) {
     switch(type) {
       case LINE:
-        isLine = true
-        isBox = !isLine
+        setIsLine(true)
+        setIsBox(false)
         break
       case BOX:
-        isBox = true
-        isLine = !isBox
+        setIsBox(true)
+        setIsLine(false)
         break
       default:
     }
   }
 
+  function storeLinePoint(point) {
+    lineCoordinates.push([point['x'], point['y']])
 
-  function lineDraw(c, point) {
-    lineCoordinated.push([point[0], point[1]])
-
-    if (lineCoordinated.length > 1) {
-      console.log("draw")
-      let [begin, end] = lineCoordinated
+    if (lineCoordinates.length > 1) {
+      let [begin, end] = lineCoordinates
       console.log(begin, end)
       getStraightLine(begin, end)
-      c.beginPath()
-      c.moveTo(begin[0], begin[1])
-      c.lineTo(end[0], end[1])
-      c.lineWidth = 6;
-      c.stroke()
-      lineCoordinated.length = 0
-      canvasState.line.push([begin, end])
+      console.log(begin, end)
+      setLines(lines => [...lines, [...begin, ...end]])
+      lineCoordinates.length = 0
+      setLineHelper([])
     }
   }
 
   // gives user immediate feedback on the line draw
-  function lineHelper(p2) {
-    let c = canvasNode.getContext('2d')
-    let p1 = lineCoordinated[0]
-    c.clearRect(0, 0, window.innerWidth, window.innerHeight)
-    getStraightLine(p1, p2)
-    c.beginPath()
-    c.moveTo(p1[0], p1[1])
-    c.lineTo(p2[0], p2[1])
-    c.lineWidth = 10;
-    c.strokeStyle = '#787878'
-    c.stroke()
+  function handleMove(e) {
+    console.log(lineCoordinates.length)
     
-
-    //render the rest of the drawing
-    renderCanvas()
-
-  }
-
-  function boxDraw(c, point) {
-
+    if(lineCoordinates.length === 1) {
+      let stage = e.currentTarget
+      let p2 = stage.getPointerPosition()
+      lineEstimate = [...lineCoordinates[0], p2['x'], p2['y']]
+      console.log(lineEstimate)
+    }
   }
 
   // takes two points of a line to determine
@@ -118,40 +98,34 @@ function App() {
   function getStraightLine(p1, p2) {
     let xDiff = Math.abs(p1[0] - p2[0]);
     let yDiff = Math.abs(p1[1] - p2[1]);
-    xDiff > yDiff ? p2[1] = p1[1] :p2[0] = p1[0]
+    xDiff > yDiff ? p2[1] = p1[1] : p2[0] = p1[0]
   }
-
-
-  // uses canvasState Obj to redraw draft
-  function renderCanvas() {
-    let c = canvasNode.getContext('2d')
-    canvasState.line.forEach( line => {
-      let [begin, end] = line
-      c.beginPath()
-      c.moveTo(begin[0], begin[1])
-      c.lineTo(end[0], end[1])
-      c.lineWidth = 6;
-      c.strokeStyle = '#000000'
-      c.stroke()
-    })
-
-  }
-
+  console.log("redraw")
   return (
     <>
     <Navbar/>
-      <StartModal /> 
       <Container textAlign='center'>
-            <canvas 
-              style={{border: '1px solid black'}} 
-              ref={(c) => setNode(c)}
-              width="500"
-              height="500"
-              >
-            </canvas>
+        <Stage width={500} height={500} onClick={handleClick} onMouseMove={handleMove}>
+          <Layer>
+          
+            <LineHelper
+              key={lineEstimate}
+              points={lineEstimate}
+            />
+            {lines.map((points, i) => {
+              return (
+                <Line
+                  key={i}
+                  points={points}
+                  stroke="black"
+                />)
+              }
+            )}
+          </Layer>
+        </Stage>
             
-            <Button content='Primary' primary onClick={() => selection(LINE)}>Line</Button>
-            <Button content='Primary' primary onClick={() => selection(BOX)}>Box</Button>
+        <Button content='Primary' primary onClick={() => selection(LINE)}>Line</Button>
+        <Button content='Primary' primary onClick={() => selection(BOX)}>Box</Button>
       </Container>
     </>
   );
