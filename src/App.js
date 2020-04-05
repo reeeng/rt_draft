@@ -3,22 +3,20 @@ import { Container, Button, Grid, GridColumn, GridRow } from 'semantic-ui-react'
 import { Stage, Layer, Rect, Line } from 'react-konva';
 import './App.css';
 
-import LineHelper from './components/LineHelper'
+import {LineHelper, StartModal} from './components'
 
 import Navbar from "./components/Navbar";
 
 function App() {
   const [lines, setLines] = useState([])
   const [lineHelper, setLineHelper] = useState([])
+  const [lineCoordinates, setLineCoordinates] = useState([])
   const [isLine, setIsLine] = useState(false)
   const [isBox, setIsBox] = useState(false)
-  let canvasState = {
-    line: [],
-    box: []
-  }
-  
-  let lineCoordinates = [],
-      boxCoordinates = [];
+
+  const [clicks, setClicks] = useState(0)
+  const [openModal , setOpenModal] = useState(true)
+  const [floorSize, setFloorSize] = useState(0)
 
   let lineEstimate = [];
   
@@ -43,7 +41,6 @@ function App() {
   }
 
   function handleClick(e) {
-    // let point = [e.evt.layerX - this.offsetLeft, e.evt.pageY - this.offsetTop]
     let stage = e.currentTarget;
     let point = stage.getPointerPosition()
     if (isLine) {
@@ -67,29 +64,33 @@ function App() {
     }
   }
 
-  function storeLinePoint(point) {
-    lineCoordinates.push([point['x'], point['y']])
-
-    if (lineCoordinates.length > 1) {
+  useEffect(() => {
+    // if clicks are over 2 then draw
+    if(clicks > 1) {
       let [begin, end] = lineCoordinates
-      console.log(begin, end)
       getStraightLine(begin, end)
-      console.log(begin, end)
       setLines(lines => [...lines, [...begin, ...end]])
-      lineCoordinates.length = 0
-      setLineHelper([])
+      setLineCoordinates([])
+      setClicks(0)
     }
+  }, [lineCoordinates, clicks])
+
+  function storeLinePoint(point) {
+    setLineCoordinates(lineCoordinates => lineCoordinates.concat([[point['x'], point['y']]]))
+    setClicks(clicks => clicks + 1)
   }
 
   // gives user immediate feedback on the line draw
   function handleMove(e) {
-    console.log(lineCoordinates.length)
-    
-    if(lineCoordinates.length === 1) {
+    if(clicks == 1) {
       let stage = e.currentTarget
       let p2 = stage.getPointerPosition()
-      lineEstimate = [...lineCoordinates[0], p2['x'], p2['y']]
-      console.log(lineEstimate)
+      if(lineCoordinates.length === 1) {
+        let begin = lineCoordinates[0]
+        let end = [p2['x'], p2['y']]
+        getStraightLine(begin, end)
+        setLineHelper([...begin, ...end])
+      }
     }
   }
 
@@ -100,18 +101,22 @@ function App() {
     let yDiff = Math.abs(p1[1] - p2[1]);
     xDiff > yDiff ? p2[1] = p1[1] : p2[0] = p1[0]
   }
+
   console.log("redraw")
   return (
     <>
+    <StartModal isOpen={openModal} setIsOpen={setOpenModal} setFloorSize={setFloorSize} floorSize={floorSize} />
     <Navbar/>
       <Container textAlign='center'>
-        <Stage width={500} height={500} onClick={handleClick} onMouseMove={handleMove}>
+        <Stage width={500} height={500} onClick={handleClick} onMouseMove={handleMove} style={{border : '2px solid black'}}>
           <Layer>
-          
-            <LineHelper
-              key={lineEstimate}
-              points={lineEstimate}
-            />
+            { lineHelper.length === 4 && clicks === 1 ?
+              <LineHelper
+                key={1000}
+                points={lineHelper}
+              /> 
+            : null}
+            
             {lines.map((points, i) => {
               return (
                 <Line
@@ -133,4 +138,3 @@ function App() {
 
 
 export default App;
- 

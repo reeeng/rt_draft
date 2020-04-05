@@ -3,9 +3,14 @@ import { Stage, Layer, Rect, Line } from "react-konva";
 
 function LineHelper(props) {
   console.log(props)
+
   return (
       <>
-        <Line/>
+        <Line
+          key={props.key}
+          points={props.points}
+          stroke="black"
+        />
       </>
   );
     
