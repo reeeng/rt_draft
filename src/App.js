@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import { Container, Button, Grid, GridColumn, GridRow } from 'semantic-ui-react'
-import { Stage, Layer, Rect, Line } from 'react-konva';
+import { Stage, Layer, Rect, Line, Text } from 'react-konva';
 import './App.css';
 
 import {LineHelper, StartModal} from './components'
@@ -53,7 +53,13 @@ function App() {
       let [begin, end] = lineCoordinates
       getStraightLine(begin, end)
       const length = getFootLengthBetweenPoints(begin, end)
-      setLines(lines => [...lines, {points: [...begin, ...end], feet: length }])
+      const textPoint = getTextPlacement(begin, end)
+      setLines(lines => [...lines, 
+        { 
+          points: [...begin, ...end],
+          feet: length, 
+          text: {point: textPoint, rotation: 0}
+        }]);
       setLineCoordinates([])
       setClicks(0)
     }
@@ -103,6 +109,20 @@ function App() {
     return pixelDiff * lengthPerPixel
   }
 
+  function getTextPlacement(start, end) {
+    const [x1, y1] = start
+    const [x2, y2] = end
+
+    let pixelDiff = 0
+    if (x1 === x2) {
+      return  [x1, (y1 + y2) / 2]
+    }else if (y1 === y2) {
+      return  [(x1 + x2) / 2, y1]
+    }else {
+      throw "line should be striaght"
+    }
+  }
+
   console.log("redraw")
   console.log(lines)
   return (
@@ -119,16 +139,29 @@ function App() {
               /> 
             : null}
             
+            {/* draws line and text underneath indicating length */}
             {lines.map((line, i) => {
               let points = line.points
+              let text = line.text
               return (
-                <Line
-                  key={i}
-                  points={points}
-                  stroke="black"
-                />)
+                <>
+                  <Line
+                    key={i+'line'}
+                    points={points}
+                    stroke="black"
+                  />
+                  <Text
+                    key={i+'lineText'}
+                    text={line.feet + 'ft'}
+                    x={text.point[0]}
+                    y={text.point[1]}
+                    rotation={text.rotation}
+                  />
+                </>
+                )
               }
             )}
+            
           </Layer>
         </Stage>
             
