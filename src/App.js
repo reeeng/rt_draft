@@ -23,23 +23,6 @@ function App() {
   const LINE = 'line'
   const BOX = 'box'
 
-  function mouseMove(e) {
-    let point = [e.pageX - this.offsetLeft, e.pageY - this.offsetTop]
-   
-    if (isLine && lineCoordinates.length == 1) {
-      //lineHelper(point)
-      return
-    } else {
-      // boxHelper(point)
-    }
-
-    // redraw
-    // let c = canvasNode.getContext('2d')
-    // c.clearRect(0, 0, window.innerWidth, window.innerHeight)
-    // renderCanvas()
-    // console.log("mouseMove")
-  }
-
   function handleClick(e) {
     let stage = e.currentTarget;
     let point = stage.getPointerPosition()
@@ -69,7 +52,8 @@ function App() {
     if(clicks > 1) {
       let [begin, end] = lineCoordinates
       getStraightLine(begin, end)
-      setLines(lines => [...lines, [...begin, ...end]])
+      const length = getFootLengthBetweenPoints(begin, end)
+      setLines(lines => [...lines, {points: [...begin, ...end], feet: length }])
       setLineCoordinates([])
       setClicks(0)
     }
@@ -102,7 +86,25 @@ function App() {
     xDiff > yDiff ? p2[1] = p1[1] : p2[0] = p1[0]
   }
 
+  function getFootLengthBetweenPoints(start, end) {
+    const [x1, y1] = start
+    const [x2, y2] = end
+
+    let pixelDiff = 0
+    if (x1 === x2) {
+      pixelDiff = Math.abs(y1 - y2)
+    }else if (y1 === y2) {
+      pixelDiff = Math.abs(x1 - x2)
+    }else {
+      throw "line should be striaght"
+    }
+
+    const lengthPerPixel = floorSize / 500
+    return pixelDiff * lengthPerPixel
+  }
+
   console.log("redraw")
+  console.log(lines)
   return (
     <>
     <StartModal isOpen={openModal} setIsOpen={setOpenModal} setFloorSize={setFloorSize} floorSize={floorSize} />
@@ -117,7 +119,8 @@ function App() {
               /> 
             : null}
             
-            {lines.map((points, i) => {
+            {lines.map((line, i) => {
+              let points = line.points
               return (
                 <Line
                   key={i}
