@@ -1,11 +1,14 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Button, Grid, GridColumn, GridRow } from 'semantic-ui-react'
 import { Stage, Layer, Rect, Line, Text } from 'react-konva';
+import cryptoRandomString from "crypto-random-string";
 import './App.css';
 
-import {LineHelper, StartModal} from './components'
+import { LineText, StartModal } from './components'
 
 import Navbar from "./components/Navbar";
+
+const KEY_REQ = {length: 3, type: 'numeric'};
 
 function App() {
   const [lines, setLines] = useState([])
@@ -53,12 +56,12 @@ function App() {
       let [begin, end] = lineCoordinates
       getStraightLine(begin, end)
       const length = getFootLengthBetweenPoints(begin, end)
-      const textPoint = getTextPlacement(begin, end)
+      const key = cryptoRandomString(KEY_REQ)
       setLines(lines => [...lines, 
-        { 
+        {
+          id: key,
           points: [...begin, ...end],
           feet: length, 
-          text: {point: textPoint, rotation: 0}
         }]);
       setLineCoordinates([])
       setClicks(0)
@@ -79,7 +82,11 @@ function App() {
         let begin = lineCoordinates[0]
         let end = [p2['x'], p2['y']]
         getStraightLine(begin, end)
-        setLineHelper([...begin, ...end])
+        const length = getFootLengthBetweenPoints(begin, end)
+        setLineHelper({ 
+          points: [...begin, ...end],
+          feet: length,
+        })
       }
     }
   }
@@ -106,25 +113,10 @@ function App() {
     }
 
     const lengthPerPixel = floorSize / 500
-    return pixelDiff * lengthPerPixel
-  }
-
-  function getTextPlacement(start, end) {
-    const [x1, y1] = start
-    const [x2, y2] = end
-
-    let pixelDiff = 0
-    if (x1 === x2) {
-      return  [x1, (y1 + y2) / 2]
-    }else if (y1 === y2) {
-      return  [(x1 + x2) / 2, y1]
-    }else {
-      throw "line should be striaght"
-    }
+    return Math.round(pixelDiff * lengthPerPixel)
   }
 
   console.log("redraw")
-  console.log(lines)
   return (
     <>
     <StartModal isOpen={openModal} setIsOpen={setOpenModal} setFloorSize={setFloorSize} floorSize={floorSize} />
@@ -132,32 +124,24 @@ function App() {
       <Container textAlign='center'>
         <Stage width={500} height={500} onClick={handleClick} onMouseMove={handleMove} style={{border : '2px solid black'}}>
           <Layer>
-            { lineHelper.length === 4 && clicks === 1 ?
-              <LineHelper
-                key={1000}
-                points={lineHelper}
-              /> 
+            { lineHelper.length != 0 && clicks === 1 ?
+              <LineText
+                points={lineHelper.points}
+                feet={lineHelper.feet}
+              />         
             : null}
             
             {/* draws line and text underneath indicating length */}
             {lines.map((line, i) => {
-              let points = line.points
-              let text = line.text
+              const {points, feet, id } = line;
+              console.log(line)
               return (
-                <>
-                  <Line
-                    key={i+'line'}
+                <LineText
+                    key={i}
+                    id={id}
                     points={points}
-                    stroke="black"
+                    feet={feet}
                   />
-                  <Text
-                    key={i+'lineText'}
-                    text={line.feet + 'ft'}
-                    x={text.point[0]}
-                    y={text.point[1]}
-                    rotation={text.rotation}
-                  />
-                </>
                 )
               }
             )}

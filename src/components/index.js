@@ -1,7 +1,7 @@
-import LineHelper from "./LineHelper";
+import LineText from "./LineHelper";
 import StartModal from "./StartModal";
 
 export {
-    LineHelper,
+    LineText,
     StartModal
 }

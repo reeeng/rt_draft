@@ -7,7 +7,7 @@ function StartModal(props) {
      
   function submitFloorSize() {
     console.log(floorSize)
-    if (isNaN(floorSize) || floorSize == 0){
+    if (isNaN(floorSize) || floorSize <= 0){
       setError(true)
     }else{
       setError(false)
